@@ -8,6 +8,35 @@ function onOpen(e) {
       .addToUi();
 }
 
+function createTrelloReadings(){
+  authorizeToTrello();
+  var doc = DocumentApp.getActiveDocument();
+  var text = doc.editAsText();
+  
+  var textLocation = text.findText('<R>');
+      
+  while (textLocation != null && textLocation.getStartOffset() != -1) {
+    textLocation = text.findText('<R>',textLocation);
+    boardId = getBoardId('TODOs');
+    listId = getListId(boardId,'readings');
+    Logger.log(listId);
+    cardId = createCard(listId,'manolo','aaa',null);
+    //textLocation.getElement().replaceText("<R>", "<R id="+cardId+">");
+  }
+}
+
+function createCard(listId,name,desc,due){
+  authorizeToTrello();
+  var requestData = {
+    "method": "POST",
+    "oAuthServiceName": "trello",
+    "oAuthUseToken": "always"
+  };
+  Logger.log("https://api.trello.com/1/cards?name="+name+"&desc="+desc+"&idList="+listId+"&due="+due);
+  var response = UrlFetchApp.fetch("https://api.trello.com/1/cards?name="+name+"&desc="+desc+"&idList="+listId+"&due="+due,requestData);
+  Logger.log(response);
+}
+
 function getToRead(){
   authorizeToTrello();
   todoId = getTodosId();
@@ -48,7 +77,7 @@ function getListId(boardId,listName){
     "oAuthServiceName": "trello",
     "oAuthUseToken": "always"
   };
-
+  
   var response = UrlFetchApp.fetch(
       "https://api.trello.com/1/boards/"+boardId+"/lists",
       requestData);
@@ -89,25 +118,19 @@ function exportCards() {
 }
 
 function authorizeToTrello() {
+  
+  
+  
   var oauthConfig = UrlFetchApp.addOAuthService("trello");
   oauthConfig.setAccessTokenUrl("https://trello.com/1/OAuthGetAccessToken");
   oauthConfig.setRequestTokenUrl("https://trello.com/1/OAuthGetRequestToken");
-  oauthConfig.setAuthorizationUrl("https://trello.com/1/OAuthAuthorizeToken");
+  //oauthConfig.setAuthorizationUrl("https://trello.com/1/OAuthAuthorizeToken");
+  oauthConfig.setAuthorizationUrl("https://trello.com/1/authorize?scope=read,write");
 
+  
   // Replace these with the values you get from 
   // https://trello.com/1/appKey/generate
   oauthConfig.setConsumerKey("");
   oauthConfig.setConsumerSecret("");
-
-  /*var requestData = {
-    "method": "GET",
-    "oAuthServiceName": "trello",
-    "oAuthUseToken": "always"
-  };
-
-  var result = UrlFetchApp.fetch(
-      "https://api.trello.com/1/members/me/boards",
-      requestData);
-  
-  Logger.log(result.getContentText());*/
 }
+
