@@ -2,39 +2,59 @@ function onOpen(e) {
   var ui = DocumentApp.getUi();
   // Or DocumentApp or FormApp.
   ui.createMenu('Guiem Trell')
-      .addItem('Update Tasks', 'updateCards')
+      .addItem('Create Readings', 'createTrelloReadings')
+      .addItem('Create Ideas', 'createTrelloIdeas')
       .addSeparator()
-      .addItem('Export Tasks', 'exportCards')
+      .addItem('Create All', 'createAllTrelloCards')
       .addToUi();
 }
 
+function createAllTrelloCards(){
+  createTrelloReadings();
+  createTrelloIdeas();
+}
+
 function createTrelloReadings(){
+  createTrelloCards('<R>');
+}
+
+function createTrelloIdeas(){
+  createTrelloCards('<I>');
+}
+
+function createTrelloCards(type){
   authorizeToTrello();
   var doc = DocumentApp.getActiveDocument();
   var text = doc.editAsText();
   
-  var textLocation = text.findText('<R>');
+  var textLocation = text.findText(type);
       
   while (textLocation != null && textLocation.getStartOffset() != -1) {
-    textLocation = text.findText('<R>',textLocation);
     boardId = getBoardId('TODOs');
-    listId = getListId(boardId,'readings');
-    Logger.log(listId);
-    cardId = createCard(listId,'manolo','aaa',null);
-    //textLocation.getElement().replaceText("<R>", "<R id="+cardId+">");
+    if (type=='<R>'){
+      listId = getListId(boardId,'readings');
+    }
+    else {
+      listId = getListId(boardId,'ideas');
+    }
+    cardNameAux = textLocation.getElement().getText();
+    cardName = cardNameAux.substr(4,cardNameAux.length);
+    cardInfo = createCard(listId,cardName,null);
+    cardId = JSON.parse((cardInfo)).id;
+    textLocation.getElement().replaceText(type, type.substr(0,2)+" id="+cardId+">");
+    textLocation = text.findText(type,textLocation);
   }
 }
 
-function createCard(listId,name,desc,due){
+function createCard(listId,name,due){
   authorizeToTrello();
   var requestData = {
     "method": "POST",
     "oAuthServiceName": "trello",
     "oAuthUseToken": "always"
   };
-  Logger.log("https://api.trello.com/1/cards?name="+name+"&desc="+desc+"&idList="+listId+"&due="+due);
-  var response = UrlFetchApp.fetch("https://api.trello.com/1/cards?name="+name+"&desc="+desc+"&idList="+listId+"&due="+due,requestData);
-  Logger.log(response);
+  var response = UrlFetchApp.fetch("https://api.trello.com/1/cards?name="+name+"&idList="+listId+"&due="+due,requestData);
+  return  response;
 }
 
 function getToRead(){
@@ -130,7 +150,6 @@ function authorizeToTrello() {
   
   // Replace these with the values you get from 
   // https://trello.com/1/appKey/generate
-  oauthConfig.setConsumerKey("");
-  oauthConfig.setConsumerSecret("");
+  oauthConfig.setConsumerKey("your key");
+  oauthConfig.setConsumerSecret("your secret");
 }
-
