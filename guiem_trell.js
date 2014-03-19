@@ -4,6 +4,7 @@ function onOpen(e) {
   ui.createMenu('Guiem Trell')
       .addItem('Create Readings', 'createTrelloReadings')
       .addItem('Create Ideas', 'createTrelloIdeas')
+      .addItem('Create Tasks', 'createTrelloTasks')
       .addSeparator()
       .addItem('Create All', 'createAllTrelloCards')
       .addToUi();
@@ -12,6 +13,11 @@ function onOpen(e) {
 function createAllTrelloCards(){
   createTrelloReadings();
   createTrelloIdeas();
+  createTrelloTasks();
+}
+
+function createTrelloTasks(){
+  createTrelloCards('<T>');
 }
 
 function createTrelloReadings(){
@@ -34,8 +40,11 @@ function createTrelloCards(type){
     if (type=='<R>'){
       listId = getListId(boardId,'readings');
     }
-    else {
+    else if (type=='<I>') {
       listId = getListId(boardId,'ideas');
+    }
+    else {
+      listId = getListId(boardId,'tasks');
     }
     cardNameAux = textLocation.getElement().getText();
     cardName = cardNameAux.substr(4,cardNameAux.length);
